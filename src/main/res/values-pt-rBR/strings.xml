@@ -2,4 +2,5 @@
 <resources>
     <string name="txt_welcome">Olá, bem vindo ao Santander Dev Week! Digite um Id de correntista para veririficar o seu saldo:</string>
     <string name="txt_continue">Continuar</string>
+    <string name="txt_account_holder_id">ID do Correntista</string>
 </resources>

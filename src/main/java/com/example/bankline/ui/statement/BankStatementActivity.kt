@@ -3,10 +3,16 @@ package com.example.bankline.ui.statement
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import androidx.activity.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bankline.R
+import com.example.bankline.data.State
 import com.example.bankline.databinding.ActivityBankStatementBinding
 import com.example.bankline.databinding.ActivityWelcomeBinding
 import com.example.bankline.domain.Correntista
+import com.example.bankline.domain.Movimentacao
+import com.example.bankline.domain.TipoMovimentacao
+import com.google.android.material.snackbar.Snackbar
 import java.lang.IllegalArgumentException
 
 class BankStatementActivity : AppCompatActivity() {
@@ -22,10 +28,31 @@ class BankStatementActivity : AppCompatActivity() {
         intent.getParcelableExtra<Correntista>(EXTRA_ACCOUNT_HOLDER) ?: throw IllegalArgumentException()
     }
 
+    private val viewModel by viewModels<BankStatementViewModel>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-        Log.d("Teste", "Chegou o ID ${accountHolder.id}")
+        binding.rvBankStatement.layoutManager = LinearLayoutManager(this)
+
+        findBankStatement()
+        binding.srlBankStatement.setOnRefreshListener{findBankStatement()}
+    }
+
+    private fun findBankStatement() {
+       viewModel.findBankStatement(accountHolder.id).observe(this){ state ->
+           when(state){
+           is State.Error -> {binding.srlBankStatement.isRefreshing = false
+               state.message?.let { Snackbar.make(binding.rvBankStatement, it, Snackbar.LENGTH_LONG).show() }
+           }
+           is State.Success -> {
+               binding.rvBankStatement.adapter = state.data?.let { BankStatementAdapter(it) }
+               binding.srlBankStatement.isRefreshing = false
+           }
+           State.Wait -> binding.srlBankStatement.isRefreshing = true
+       }
+       }
+
     }
 }
